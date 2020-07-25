@@ -1,52 +1,61 @@
-import React from 'react';
+import React, { useState, FormEvent } from 'react';
 
 import logoImg from '../../assets/logo.svg';
 import { FiChevronRight } from 'react-icons/fi'
 
+import api from '../../services/api';
 import { Title, Form, Repositories } from './styles';
 
+interface Repository {
+  full_name: string;
+  description: string;
+  owner: {
+    login: string;
+    avatar_url: string;
+  };
+}
+
 const Dashboard: React.FC = () => {
+
+  const [newRepo, setNewRepo] = useState('dev-rodrigues/');
+  const [repositories, setRepositories] = useState<Repository[]>([]);
+
+  async function handleAddRepository(event:FormEvent<HTMLFormElement>): Promise<void> {
+    event.preventDefault();
+
+    const response = await api.get<Repository>(`repos/${newRepo}`);
+    const repository = response.data;
+
+    setRepositories([ ...repositories, repository ]);
+    setNewRepo('dev-rodrigues/');
+  }
+
   return (
     <>
       <img src={logoImg} alt="Github Explorer"/>
       <Title>Explore repositórios no Github</Title>
 
-      <Form>
-        <input type="text" placeholder="Nome do repositório" />
+      <Form onSubmit={handleAddRepository}>
+        <input
+          value={newRepo}
+          onChange={(e) => setNewRepo(e.target.value)}
+          type="text" placeholder="Nome do repositório" />
         <button type="submit">Pesquisar</button>
       </Form>
 
       <Repositories>
-        <a href="teste">
-          <img src="https://avatars2.githubusercontent.com/u/41126285?s=460&u=cff67ee02f89e5c6652d2a0a6df5ca99317c8388&v=4" alt="Carlos Henrique"/>
-          <div>
-            <strong>dev-rodrigues/github-explorer</strong>
-            <p>Lorem Ipsum is simply dummy text of the printing and typesetting</p>
-          </div>
+        {repositories.map(repository => (
+          <a key={repository.full_name} href="teste">
+            <img src={repository.owner.avatar_url} alt={repository.owner.login} />
+            <div>
+              <strong>{repository.full_name}</strong>
+              <p>{repository.description}</p>
+            </div>
 
-          <FiChevronRight size={20} />
+            <FiChevronRight size={20} />
 
-        </a>
-        <a href="teste">
-          <img src="https://avatars2.githubusercontent.com/u/41126285?s=460&u=cff67ee02f89e5c6652d2a0a6df5ca99317c8388&v=4" alt="Carlos Henrique"/>
-          <div>
-            <strong>dev-rodrigues/github-explorer</strong>
-            <p>Lorem Ipsum is simply dummy text of the printing and typesetting</p>
-          </div>
-
-          <FiChevronRight size={20} />
-
-        </a>
-        <a href="teste">
-          <img src="https://avatars2.githubusercontent.com/u/41126285?s=460&u=cff67ee02f89e5c6652d2a0a6df5ca99317c8388&v=4" alt="Carlos Henrique"/>
-          <div>
-            <strong>dev-rodrigues/github-explorer</strong>
-            <p>Lorem Ipsum is simply dummy text of the printing and typesetting</p>
-          </div>
-
-          <FiChevronRight size={20} />
-
-        </a>
+          </a>
+        ))}
       </Repositories>
     </>
   );
